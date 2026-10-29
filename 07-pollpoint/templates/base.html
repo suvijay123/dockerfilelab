@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}PollPoint{% endblock %}</title>
+<style>
+  :root { --bg:#0b1020; --card:#151c33; --line:#26304f; --text:#eef1fa; --muted:#a3acc7;
+          --accent:#7c5cff; --accent2:#22d3a6; --warn:#ffb547; }
+  * { box-sizing: border-box; }
+  body { margin:0; min-height:100vh; background:var(--bg); color:var(--text);
+         font-family: system-ui, -apple-system, "Segoe UI", sans-serif; display:flex; flex-direction:column; }
+  a { color: var(--accent2); }
+  header { display:flex; align-items:center; justify-content:space-between; padding:18px 28px;
+           border-bottom:1px solid var(--line); }
+  .logo { font-weight:800; font-size:1.3rem; letter-spacing:-.02em; text-decoration:none; color:var(--text); }
+  .logo span { color: var(--accent2); }
+  main { flex:1; width:100%; max-width:980px; margin:0 auto; padding:32px 20px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:18px; padding:26px; }
+  h1 { margin:0 0 18px; font-size:clamp(1.6rem, 4vw, 2.6rem); line-height:1.15; letter-spacing:-.02em; }
+  label { display:block; font-weight:600; margin:14px 0 6px; color:var(--muted); font-size:.9rem; }
+  input { width:100%; font:inherit; padding:12px 14px; border-radius:10px; border:1px solid var(--line);
+          background:#0e1428; color:var(--text); }
+  button, .btn { font:inherit; font-weight:700; border:0; border-radius:12px; padding:14px 22px; cursor:pointer;
+                 background:var(--accent); color:#fff; text-decoration:none; display:inline-block; }
+  .muted { color: var(--muted); }
+  footer { padding:14px 28px; border-top:1px solid var(--line); color:var(--muted); font-size:.85rem;
+           font-family: ui-monospace, Menlo, Consolas, monospace; display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px; }
+</style>
+{% block head %}{% endblock %}
+</head>
+<body>
+<header>
+  <a class="logo" href="/">Poll<span>Point</span></a>
+  <span class="muted">live polls for your class</span>
+</header>
+<main>{% block content %}{% endblock %}</main>
+<footer>
+  <span>version {{ version }}</span>
+  <span>served by container {{ container }}</span>
+</footer>
+</body>
+</html>

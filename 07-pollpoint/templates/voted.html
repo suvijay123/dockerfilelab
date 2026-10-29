@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block title %}Thanks · PollPoint{% endblock %}
+{% block content %}
+<section class="card" style="max-width:560px; margin:0 auto; text-align:center">
+  <h1>Vote counted</h1>
+  <p class="muted">{{ poll.question }}</p>
+  <p>Look at the big screen to watch the results move.</p>
+</section>
+{% endblock %}

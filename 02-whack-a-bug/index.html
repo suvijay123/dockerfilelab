@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Whack-a-Bug · served from a Docker container</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; min-height: 100vh; background: #0b0f1a; color: #f4f1e8;
+         font-family: system-ui, sans-serif; display: flex; flex-direction: column;
+         align-items: center; gap: 18px; padding: 32px 16px; }
+  h1 { margin: 0; font-size: clamp(2rem, 6vw, 3.4rem); letter-spacing: -0.03em; }
+  h1 span { color: #c8f23a; }
+  .tag { font-family: monospace; color: #0b0f1a; background: #c8f23a;
+         padding: 6px 12px; border-radius: 999px; font-weight: 700; }
+  .hud { display: flex; gap: 28px; font-size: 1.3rem; font-weight: 700; }
+  .hud b { color: #ff5fa2; }
+  .grid { display: grid; grid-template-columns: repeat(3, 110px); gap: 14px; }
+  .box { width: 110px; height: 110px; border: 3px solid #f4f1e8; border-radius: 16px;
+         background: #151b2c; box-shadow: 6px 6px 0 #3a4260; position: relative;
+         overflow: hidden; cursor: pointer; }
+  .box::before { content: ""; position: absolute; inset: 10px 10px auto; height: 8px;
+         background: repeating-linear-gradient(90deg, #3a4260 0 14px, transparent 14px 20px); }
+  .bug { position: absolute; left: 50%; top: 110%; width: 56px; height: 56px;
+         transform: translateX(-50%); transition: top .12s ease-out; }
+  .box.up .bug { top: 30px; }
+  .box.hit { background: #c8f23a; }
+  button { font: inherit; font-weight: 700; font-size: 1.2rem; padding: 14px 32px;
+           border-radius: 14px; border: 3px solid #f4f1e8; background: #ff5fa2;
+           color: #0b0f1a; cursor: pointer; box-shadow: 6px 6px 0 #c8f23a; }
+  button:disabled { opacity: .5; cursor: default; }
+  .msg { min-height: 1.6em; font-size: 1.2rem; color: #b7bdcc; text-align: center; }
+</style>
+</head>
+<body>
+  <div class="tag">Running inside a Docker container</div>
+  <h1>Whack-a-<span>Bug</span></h1>
+  <div class="hud">
+    <div>Score: <b id="score">0</b></div>
+    <div>Time: <b id="time">30</b>s</div>
+    <div>Best: <b id="best">0</b></div>
+  </div>
+  <div class="grid" id="grid"></div>
+  <button id="start">Start debugging</button>
+  <div class="msg" id="msg">Bugs are escaping the containers. Squash them before they hit production!</div>
+
+<script>
+const grid = document.getElementById('grid');
+const bugSvg = '<svg class="bug" viewBox="0 0 64 64" aria-hidden="true"><g stroke="#f4f1e8" stroke-width="3" stroke-linecap="round"><path d="M14 22 4 16M14 34H2M14 46 4 52M50 22l10-6M50 34h12M50 46l10 6M26 12l-6-8M38 12l6-8"/></g><ellipse cx="32" cy="36" rx="18" ry="22" fill="#ff5fa2" stroke="#f4f1e8" stroke-width="3"/><circle cx="32" cy="16" r="9" fill="#ff5fa2" stroke="#f4f1e8" stroke-width="3"/><path d="M32 18v40" stroke="#0b0f1a" stroke-width="3"/><circle cx="24" cy="32" r="3" fill="#0b0f1a"/><circle cx="40" cy="44" r="3" fill="#0b0f1a"/></svg>';
+const boxes = [];
+for (let i = 0; i < 9; i++) {
+  const b = document.createElement('div');
+  b.className = 'box';
+  b.innerHTML = bugSvg;
+  b.addEventListener('pointerdown', () => whack(b));
+  grid.appendChild(b);
+  boxes.push(b);
+}
+
+let score = 0, timeLeft = 30, playing = false, popTimer, clock;
+let best = 0;
+try { best = Number(localStorage.getItem('bugBest')) || 0; } catch (e) {}
+document.getElementById('best').textContent = best;
+
+function pop() {
+  if (!playing) return;
+  const free = boxes.filter(b => !b.classList.contains('up'));
+  const b = free[Math.floor(Math.random() * free.length)];
+  if (b) {
+    b.classList.add('up');
+    const stay = Math.max(450, 1100 - score * 25);
+    setTimeout(() => b.classList.remove('up'), stay);
+  }
+  popTimer = setTimeout(pop, Math.max(300, 800 - score * 15));
+}
+
+function whack(b) {
+  if (!playing || !b.classList.contains('up')) return;
+  b.classList.remove('up');
+  b.classList.add('hit');
+  setTimeout(() => b.classList.remove('hit'), 150);
+  score++;
+  document.getElementById('score').textContent = score;
+}
+
+function end() {
+  playing = false;
+  clearTimeout(popTimer);
+  clearInterval(clock);
+  boxes.forEach(b => b.classList.remove('up'));
+  if (score > best) {
+    best = score;
+    try { localStorage.setItem('bugBest', best); } catch (e) {}
+    document.getElementById('best').textContent = best;
+  }
+  const rank = score >= 30 ? 'Senior DevOps engineer' : score >= 18 ? 'Docker pro' : score >= 8 ? 'Junior debugger' : 'Intern (it works on my machine!)';
+  document.getElementById('msg').textContent = `You squashed ${score} bugs. Rank: ${rank}`;
+  document.getElementById('start').disabled = false;
+  document.getElementById('start').textContent = 'Play again';
+}
+
+document.getElementById('start').addEventListener('click', () => {
+  score = 0; timeLeft = 30; playing = true;
+  document.getElementById('score').textContent = 0;
+  document.getElementById('time').textContent = 30;
+  document.getElementById('msg').textContent = 'Go go go!';
+  document.getElementById('start').disabled = true;
+  pop();
+  clock = setInterval(() => {
+    timeLeft--;
+    document.getElementById('time').textContent = timeLeft;
+    if (timeLeft <= 0) end();
+  }, 1000);
+});
+</script>
+</body>
+</html>

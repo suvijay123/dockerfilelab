@@ -1,0 +1,8 @@
+# Normalize text files in the repo
+* text=auto
+
+# Files that run inside Linux containers must keep Linux (LF) line endings,
+# even when committed from Windows. Otherwise: "/bin/sh^M: bad interpreter".
+*.sh       text eol=lf
+*.cow      text eol=lf
+Dockerfile text eol=lf

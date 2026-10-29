@@ -1,0 +1,28 @@
+# ═══════════════════════════════════════════════════════════════
+#  DEMO 5b · THE SLIM IMAGE  (industry best practice)
+#  Same app as Dockerfile.fat, roughly 7x smaller.
+# ═══════════════════════════════════════════════════════════════
+
+# Fix 1: slim base image (just enough to run Python)
+FROM python:3.12-slim
+
+WORKDIR /app
+
+# Fix 2: dependencies first, so code changes reuse this cached layer
+COPY requirements.txt .
+
+# Fix 3: don't keep pip's download cache in the image
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Then the code (filtered by .dockerignore)
+COPY app.py .
+
+# Fix 4: run as a normal user, not root
+RUN useradd --create-home appuser
+USER appuser
+
+EXPOSE 5000
+CMD ["python", "app.py"]
+
+# Build:  docker build -f Dockerfile.slim -t optimize:slim .
+# Compare: docker images optimize

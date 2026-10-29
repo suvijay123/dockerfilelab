@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block content %}
+<div style="display:grid; gap:24px; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));">
+  <section class="card">
+    <h1>Ask your class anything</h1>
+    {% if request.args.get('error') %}
+      <p style="color:var(--warn)">Add a question and at least two options.</p>
+    {% endif %}
+    <form method="post" action="/polls">
+      <label for="question">Question</label>
+      <input id="question" name="question" maxlength="140" required placeholder="Which demo was the most fun?">
+      <label for="o1">Options (2 to 6)</label>
+      <div style="display:grid; gap:8px">
+        <input id="o1" name="option" maxlength="60" required placeholder="The whale">
+        <input name="option" maxlength="60" required placeholder="Whack-a-bug" aria-label="Option 2">
+        <input name="option" maxlength="60" placeholder="Scale me" aria-label="Option 3">
+        <input name="option" maxlength="60" placeholder="Time machine" aria-label="Option 4">
+        <input name="option" maxlength="60" placeholder="(optional)" aria-label="Option 5">
+        <input name="option" maxlength="60" placeholder="(optional)" aria-label="Option 6">
+      </div>
+      <p><button type="submit">Create poll and present</button></p>
+    </form>
+  </section>
+  <section class="card">
+    <h1 style="font-size:1.4rem">Your polls</h1>
+    {% for p in polls %}
+      <p style="display:flex; justify-content:space-between; gap:12px; border-top:1px solid var(--line); padding-top:12px">
+        <a href="/p/{{ p.id }}/present">{{ p.question }}</a>
+        <span class="muted">{{ p.total }} votes</span>
+      </p>
+    {% else %}
+      <p class="muted">No polls yet. Create one and put it on the projector.</p>
+    {% endfor %}
+  </section>
+</div>
+{% endblock %}

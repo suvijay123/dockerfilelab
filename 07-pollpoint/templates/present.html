@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block title %}{{ poll.question }} · PollPoint{% endblock %}
+{% block head %}
+<style>
+  main { max-width: 1280px; }
+  .stage { display:grid; gap:28px; grid-template-columns: minmax(260px, 340px) 1fr; align-items:start; }
+  @media (max-width: 800px) { .stage { grid-template-columns: 1fr; } }
+  .qr svg { width:100%; height:auto; border-radius:14px; display:block; }
+  .join { font-family: ui-monospace, Menlo, Consolas, monospace; word-break: break-all; font-size:.95rem; }
+  .row { margin:16px 0; }
+  .row-top { display:flex; justify-content:space-between; font-size:1.25rem; font-weight:700; margin-bottom:8px; }
+  .track { height:34px; background:#0e1428; border-radius:10px; overflow:hidden; border:1px solid var(--line); }
+  .bar { height:100%; width:0; border-radius:10px; transition: width .6s ease;
+         background: linear-gradient(90deg, var(--accent), var(--accent2)); }
+  .total { font-size:3rem; font-weight:800; color:var(--accent2); }
+  .warn { background:#3a2a0b; border:1px solid var(--warn); color:var(--warn); border-radius:12px; padding:12px 14px; font-size:.9rem; }
+</style>
+{% endblock %}
+{% block content %}
+<div class="stage">
+  <aside class="card">
+    <p class="muted" style="margin-top:0">Scan to vote</p>
+    {% if qr_svg %}
+      <div class="qr">{{ qr_svg|safe }}</div>
+    {% else %}
+      <p class="warn">QR code library not installed. Share the link below instead.</p>
+    {% endif %}
+    <p class="join">{{ vote_url }}</p>
+    {% if on_localhost %}
+      <p class="warn">Phones can't reach "localhost". Open this page using your laptop's IP address, or run the container with -e PUBLIC_URL=http://YOUR-IP:8000</p>
+    {% endif %}
+    <p><span class="total" id="total">0</span> <span class="muted">votes</span></p>
+  </aside>
+  <section class="card">
+    <h1>{{ poll.question }}</h1>
+    <div id="results" aria-live="polite"></div>
+  </section>
+</div>
+<script>
+  const results = document.getElementById("results");
+  const totalEl = document.getElementById("total");
+  function esc(s) { const d = document.createElement("div"); d.textContent = s; return d.innerHTML; }
+  async function refresh() {
+    try {
+      const r = await fetch("/api/polls/{{ poll.id }}", { cache: "no-store" });
+      const data = await r.json();
+      totalEl.textContent = data.total;
+      if (!results.children.length) {
+        results.innerHTML = data.options.map(o => `
+          <div class="row">
+            <div class="row-top"><span>${esc(o.label)}</span><span id="p${o.id}">0%</span></div>
+            <div class="track"><div class="bar" id="b${o.id}"></div></div>
+          </div>`).join("");
+      }
+      data.options.forEach(o => {
+        document.getElementById("b" + o.id).style.width = o.percent + "%";
+        document.getElementById("p" + o.id).textContent = `${o.percent}% · ${o.votes}`;
+      });
+    } catch (e) { /* container restarting? try again next tick */ }
+  }
+  refresh();
+  setInterval(refresh, 2000);
+</script>
+{% endblock %}

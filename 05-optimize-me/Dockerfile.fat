@@ -1,0 +1,22 @@
+# ═══════════════════════════════════════════════════════════════
+#  DEMO 5a · THE FAT IMAGE  (what NOT to do)
+#  Spot the 4 mistakes before you look at Dockerfile.slim!
+# ═══════════════════════════════════════════════════════════════
+
+# Mistake 1: the full Python image (compilers, docs, tools you never use)
+FROM python:3.12
+
+WORKDIR /app
+
+# Mistake 2: copying ALL code before installing dependencies,
+#            so ANY code change re-runs the slow pip install
+COPY . .
+
+# Mistake 3: pip keeps its download cache inside the image
+RUN pip install -r requirements.txt
+
+# Mistake 4: no USER line, so the app runs as root (the default)
+
+CMD ["python", "app.py"]
+
+# Build:  docker build -f Dockerfile.fat -t optimize:fat .

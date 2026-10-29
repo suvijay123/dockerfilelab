@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Campus Feedback Board</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: system-ui, sans-serif; background: #f5f3ee; color: #101826; }
+  header { background: #101826; color: #f5f3ee; padding: 24px 32px; display: flex;
+           justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
+  header h1 { margin: 0; font-size: 1.6rem; }
+  .meta { font-family: monospace; font-size: .9rem; color: #f0a35e; }
+  main { max-width: 760px; margin: 0 auto; padding: 32px 16px; display: grid; gap: 24px; }
+  .card { background: #fff; border: 1px solid #e2ded5; border-radius: 14px; padding: 24px; }
+  form { display: grid; gap: 12px; }
+  label { font-weight: 600; font-size: .9rem; }
+  input, textarea, select { font: inherit; padding: 10px 12px; border: 1px solid #cfcabf; border-radius: 8px; width: 100%; }
+  button { font: inherit; font-weight: 700; padding: 12px; border: 0; border-radius: 8px;
+           background: #1f6feb; color: #fff; cursor: pointer; }
+  .score { font-size: 2.4rem; font-weight: 800; color: #1f6feb; }
+  .item { border-top: 1px solid #eee9df; padding: 14px 0; }
+  .item:first-child { border-top: 0; }
+  .stars { color: #e8833a; letter-spacing: 2px; }
+  .who { font-weight: 600; }
+  .when { color: #6b7280; font-size: .85rem; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Campus Feedback Board</h1>
+  <div class="meta">version {{ version }} &middot; container {{ container }}</div>
+</header>
+<main>
+  <section class="card">
+    <form method="post" action="/feedback">
+      <div><label for="name">Your name</label><input id="name" name="name" maxlength="40" placeholder="Optional"></div>
+      <div><label for="message">Feedback on today's workshop</label><textarea id="message" name="message" rows="3" maxlength="280" required></textarea></div>
+      <div><label for="rating">Rating</label>
+        <select id="rating" name="rating">
+          <option value="5">5 - Loved it</option><option value="4">4 - Good</option>
+          <option value="3">3 - Okay</option><option value="2">2 - Meh</option><option value="1">1 - Lost me</option>
+        </select></div>
+      <button type="submit">Post feedback</button>
+    </form>
+  </section>
+  <section class="card">
+    <div>Average rating: <span class="score">{{ avg }}</span> / 5 from {{ rows|length }} responses</div>
+  </section>
+  <section class="card">
+    {% for r in rows %}
+      <div class="item">
+        <div><span class="who">{{ r.name }}</span> <span class="stars">{{ '*' * r.rating }}</span></div>
+        <div>{{ r.message }}</div>
+        <div class="when">{{ r.created }}</div>
+      </div>
+    {% else %}
+      <p>No feedback yet. Be the first!</p>
+    {% endfor %}
+  </section>
+</main>
+</body>
+</html>
